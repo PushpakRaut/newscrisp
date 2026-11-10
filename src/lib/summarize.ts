@@ -48,7 +48,6 @@ const OUTPUT_SCHEMA = {
 
 let client: Anthropic | null = null;
 let disabledUntil = 0;
-let lastError: string | null = null;
 
 function getClient(): Anthropic | null {
   if (process.env.USE_AI === "0") return null;
@@ -67,12 +66,7 @@ function getClient(): Anthropic | null {
 function disable(err: unknown, ms: number) {
   if (Date.now() < disabledUntil) return; // parallel batches fail together; log once
   disabledUntil = Date.now() + ms;
-  lastError = err instanceof Error ? err.message : String(err);
-  console.warn(`[summarize] AI summaries off for ${ms / 60_000} min: ${lastError}`);
-}
-
-export function aiStatus() {
-  return { enabled: Date.now() >= disabledUntil && process.env.USE_AI !== "0", lastError };
+  console.warn(`[summarize] AI summaries off for ${ms / 60_000} min: ${err instanceof Error ? err.message : err}`);
 }
 
 /** Cut text to at most `max` words, ending on a full sentence when possible. */
@@ -107,14 +101,14 @@ function leadSummary(text: string, headline: string): string {
 }
 
 /** Fallback when the AI isn't available: the article's opening lines, or else the feed's own text. */
-function fallbackSummary(a: RawArticle): Summary & { by: "article" | "feed" } {
+function fallbackSummary(a: RawArticle, maxWords = MAX_WORDS): Summary & { by: "article" | "feed" } {
   if (a.body && countWords(a.body) >= 40) {
     const lead = leadSummary(a.body, a.title);
     if (countWords(lead) >= 25) return { id: a.id, headline: a.title, summary: lead, category: a.category, by: "article" };
   }
   // Some feeds repeat the headline as the description; don't show it twice.
   const usable = a.snippet.length > 40 && !norm(a.snippet).startsWith(norm(a.title).slice(0, 60));
-  return { id: a.id, headline: a.title, summary: usable ? trimWords(a.snippet) : "", category: a.category, by: "feed" };
+  return { id: a.id, headline: a.title, summary: usable ? trimWords(a.snippet, maxWords) : "", category: a.category, by: "feed" };
 }
 
 async function summarizeBatch(ai: Anthropic, batch: RawArticle[]): Promise<Map<string, Summary>> {
@@ -168,16 +162,19 @@ async function summarizeBatch(ai: Anthropic, batch: RawArticle[]): Promise<Map<s
 type Result = Summary & { by: "ai" | "article" | "feed" };
 const cache = new Map<string, Result>();
 
-export async function summarizeAll(articles: RawArticle[]): Promise<Map<string, Result>> {
+export async function summarizeAll(
+  articles: RawArticle[],
+  { allowAI = true, maxWords = MAX_WORDS }: { allowAI?: boolean; maxWords?: number } = {},
+): Promise<Map<string, Result>> {
   const result = new Map<string, Result>();
   const todo: RawArticle[] = [];
   for (const a of articles) {
     const hit = cache.get(a.id);
-    if (hit && hit.by === "ai") result.set(a.id, hit);
+    if (allowAI && hit && hit.by === "ai") result.set(a.id, hit);
     else todo.push(a);
   }
 
-  const ai = getClient();
+  const ai = allowAI ? getClient() : null;
   if (ai && todo.length) {
     const batches: RawArticle[][] = [];
     for (let i = 0; i < todo.length; i += BATCH_SIZE) batches.push(todo.slice(i, i + BATCH_SIZE));
@@ -187,6 +184,7 @@ export async function summarizeAll(articles: RawArticle[]): Promise<Map<string, 
         for (const [id, sum] of s.value) {
           const entry = { ...sum, by: "ai" as const };
           cache.set(id, entry);
+          if (cache.size > 2000) cache.delete(cache.keys().next().value!); // drop the oldest, like the article cache
           result.set(id, entry);
         }
       } else {
@@ -207,7 +205,7 @@ export async function summarizeAll(articles: RawArticle[]): Promise<Map<string, 
 
   for (const a of todo) {
     if (!result.has(a.id)) {
-      const entry = fallbackSummary(a);
+      const entry = fallbackSummary(a, maxWords);
       cache.set(a.id, entry);
       result.set(a.id, entry);
     }

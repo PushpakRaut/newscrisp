@@ -1,10 +1,9 @@
+import { EDITION } from "@/lib/edition";
 import { getShorts } from "@/lib/news";
-import { counts } from "@/lib/store";
 import type { FeedResponse } from "@/lib/types";
 
 export async function GET() {
-  const { shorts, fetchedAt, failedSources, aiSummaries } = await getShorts();
-  const { comments } = await counts(shorts.map((s) => s.id));
-  const body: FeedResponse = { shorts, comments, fetchedAt, aiSummaries, failedSources };
+  const { shorts, fetchedAt, failedSources } = await getShorts();
+  const body: FeedResponse = { shorts, fetchedAt, edition: EDITION, failedSources };
   return Response.json(body);
 }

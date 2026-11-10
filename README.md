@@ -2,6 +2,31 @@
 
 Today's news, one story per screen, each summarized in 60 words. Swipe up for the next story. The look is editorial paper: ivory pages, Newsreader serif headlines, small-caps labels and a rust accent, with a deep navy dark mode (warm ivory text, copper accent). The motion follows Apple's approach: springs, sheets you can drag away, and reduced-motion fallbacks.
 
+## Two editions
+
+The same code runs as one of two editions, chosen by the `NEWSCRISP_EDITION` setting.
+
+| | Public (default) | Full (private) |
+|---|---|---|
+| How to run it | `npm run dev` | `npm run dev:full`, or `NEWSCRISP_EDITION=full` in `.env.local` |
+| Story text | The feed's own short description, at most 40 words | Summary built from the article page, or by Claude when a key is set |
+| Article pages | Never read | Read for summaries |
+| Photos | None; topic icons instead | Publisher photos |
+| AI | Off | On when `ANTHROPIC_API_KEY` is set |
+| Ads, reports | Off | Placeholder ad cards; reports saved to `.data/` |
+| Shared text | Headline and link | Headline, summary and link |
+
+The public edition is the default, so a deploy is public-safe even if you forget the setting. It shows only what publishers put in their public RSS feeds, credits each outlet, and links to the original article. It has an About page (the ⓘ button) listing the sources and explaining privacy. Set `NEXT_PUBLIC_CONTACT_EMAIL` to give publishers a contact for removal requests.
+
+This lowers the legal risk but doesn't remove it: check each outlet's feed terms before running ads, and get legal advice before a commercial launch. The full version is saved at git tag `full-version`.
+
+### Deploy the public edition (Vercel, free)
+
+1. Push this repository to GitHub.
+2. At vercel.com, choose Add New → Project and import the repository.
+3. Optionally add `NEXT_PUBLIC_CONTACT_EMAIL` under Settings → Environment Variables. Don't set `NEWSCRISP_EDITION` or `ANTHROPIC_API_KEY`.
+4. Deploy.
+
 ## Run it
 
 ```bash
@@ -32,7 +57,7 @@ Summaries come from `claude-haiku-5-5`, the low-cost model, at low effort, in ba
 | 60-word AI summarizer + fallback | `src/lib/summarize.ts` |
 | Read article pages for full story text | `src/lib/article.ts` |
 | Reports store (JSON file in `.data/`) | `src/lib/store.ts` |
-| API routes | `src/app/api/{feed,report}/route.ts` (`comments` exists but isn't used in the UI yet) |
+| API routes | `src/app/api/{feed,report}/route.ts` |
 | UI | `src/components/` (`App`, `NewsCard`, `Stories`, `Sheets`, `motion`, `icons`) |
 
 - **Today tab:** masthead with the date and a count of new stories, a labelled Refresh button, Stories rings, topic tabs (For You, India, World, …), and a feed that always opens on the first story.

@@ -5,9 +5,9 @@ import { CATEGORIES, type Category, type FeedResponse, type Short } from "@/lib/
 import { CATEGORY_LABEL, getDeviceId, timeAgo, useLocal } from "@/lib/client";
 import { CaughtUpCard, NewsCard, SponsoredCard, StoryPage, Thumb, type CardActions } from "./NewsCard";
 import { StoriesViewer, StoryRings, type StoryGroup } from "./Stories";
-import { MenuSheet, StorySheet } from "./Sheets";
+import { AboutSheet, MenuSheet, StorySheet } from "./Sheets";
 import { prefersReducedMotion } from "./motion";
-import { Check, Newspaper, Refresh, Search, XMark } from "./icons";
+import { Check, Info, Newspaper, Refresh, Search, XMark } from "./icons";
 
 type Tab = "today" | "search";
 type Topic = "foryou" | Category;
@@ -27,10 +27,10 @@ function buildOrder(
   shorts: Short[],
   read: Set<string>,
   lessCats: Partial<Record<Category, number>>,
+  ads: boolean,
 ): FeedItem[] {
   const affinity: Record<string, number> = {};
-  for (const c of CATEGORIES) affinity[c] = 1;
-  for (const c of CATEGORIES) affinity[c] = Math.max(0.1, affinity[c] - 0.7 * (lessCats[c] ?? 0));
+  for (const c of CATEGORIES) affinity[c] = Math.max(0.1, 1 - 0.7 * (lessCats[c] ?? 0));
 
   const now = Date.now();
   const score = (s: Short) => affinity[s.category] * Math.exp(-(now - Date.parse(s.publishedAt)) / 3_600_000 / 18);
@@ -42,7 +42,7 @@ function buildOrder(
   const push = (s: Short) => {
     items.push({ kind: "short", id: s.id });
     count++;
-    if (count % AD_EVERY === 0) items.push({ kind: "ad", key: `ad-${count}` });
+    if (ads && count % AD_EVERY === 0) items.push({ kind: "ad", key: `ad-${count}` });
   };
   unread.forEach(push);
   if (shorts.length) items.push({ kind: "caught" });
@@ -72,9 +72,13 @@ export default function App() {
   const [focus, setFocus] = useState<Short | null>(null);
   const [viewer, setViewer] = useState<{ groups: StoryGroup[]; start: number; read: Set<string> } | null>(null);
   const [justUpdated, setJustUpdated] = useState(false);
+  const [about, setAbout] = useState(false);
+
+  // The server says which edition it runs; until it answers, assume the public one.
+  const edition = data?.edition ?? "public";
+  const isPublic = edition === "public";
 
   const feedRef = useRef<HTMLDivElement>(null);
-  const device = useMemo(() => getDeviceId(), []);
 
   const readSet = useMemo(() => new Set(read), [read]);
 
@@ -155,8 +159,8 @@ export default function App() {
   });
   useEffect(() => {
     const i = orderInputs.current;
-    setOrder(buildOrder(inTopic, i.read, lessCats));
-  }, [inTopic, lessCats]);
+    setOrder(buildOrder(inTopic, i.read, lessCats, !isPublic));
+  }, [inTopic, lessCats, isPublic]);
 
   // A fresh order always starts at the first story, with nothing above it.
   useLayoutEffect(() => {
@@ -170,7 +174,8 @@ export default function App() {
 
   const actions: CardActions = {
     onShare: async (s) => {
-      const text = `${s.headline}\n\n${s.summary}\n\nvia ${s.source}`;
+      // The public edition shares only the headline and the link, not the publisher's text.
+      const text = isPublic ? `${s.headline} (via ${s.source})` : `${s.headline}\n\n${s.summary}\n\nvia ${s.source}`;
       try {
         if (navigator.share) {
           await navigator.share({ title: s.headline, text, url: s.link });
@@ -222,7 +227,7 @@ export default function App() {
   };
 
   return (
-    <div className="app">
+    <div className={`app edition-${edition}`}>
       {tab === "today" ? (
         <header className="nav-bar">
           <div className="masthead">
@@ -238,6 +243,9 @@ export default function App() {
               </p>
               <h1 className="wordmark">NewsCrisp</h1>
             </div>
+            <button className="round-btn info-btn" onClick={() => setAbout(true)} aria-label="About NewsCrisp and its sources">
+              <Info size={18} />
+            </button>
             <button
               className={`refresh-btn ${loading ? "busy" : ""} ${justUpdated ? "done" : ""}`}
               onClick={load}
@@ -401,11 +409,14 @@ export default function App() {
         />
       )}
 
+      {about && <AboutSheet edition={edition} onClosed={() => setAbout(false)} />}
+
       {menuFor && (
         <MenuSheet
           key={menuFor.id}
           short={menuFor}
           onClosed={() => setMenuFor(null)}
+          allowReport={!isPublic}
           onMuteSource={(src) => {
             setMutedSources((m) => [...new Set([...m, src])]);
             showToast(`Hiding ${src}`, () => setMutedSources((m) => m.filter((x) => x !== src)));
@@ -420,7 +431,7 @@ export default function App() {
             fetch("/api/report", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ shortId: s.id, reason, device }),
+              body: JSON.stringify({ shortId: s.id, reason, device: getDeviceId() }),
             }).catch(() => {});
             showToast("Thanks for the report");
           }}

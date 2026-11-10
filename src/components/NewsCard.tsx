@@ -157,7 +157,7 @@ export function NewsCard({ short, read, ...a }: Props) {
           {short.summary ? (
             <p className="card-summary">{short.summary}</p>
           ) : (
-            <p className="card-summary faint">{short.source} only shared a headline. Tap to read the full story.</p>
+            <p className="card-summary faint">{short.source} shared only the headline. Tap for the link to the full story.</p>
           )}
         </div>
       </div>

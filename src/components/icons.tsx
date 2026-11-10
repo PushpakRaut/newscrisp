@@ -14,11 +14,6 @@ const base = (size: number, strokeWidth = 1.9) => ({
   "aria-hidden": true,
 });
 
-export const Heart = ({ size = 22, filled }: P) => (
-  <svg {...base(size)} fill={filled ? "currentColor" : "none"}>
-    <path d="M12 20.3s-7.8-4.6-9.3-9.6C1.6 7 3.9 4 7.2 4c2 0 3.6 1.1 4.8 2.8C13.2 5.1 14.8 4 16.8 4c3.3 0 5.6 3 4.5 6.7-1.5 5-9.3 9.6-9.3 9.6z" />
-  </svg>
-);
 export const Share = ({ size = 22 }: P) => (
   <svg {...base(size)}>
     <path d="M12 3v12" />
@@ -52,14 +47,16 @@ export const Refresh = ({ size = 20 }: P) => (
     <path d="M20 4v5h-5" />
   </svg>
 );
-export const Chevron = ({ size = 14 }: P) => (
-  <svg {...base(size, 2.4)}>
-    <path d="M9 5l7 7-7 7" />
-  </svg>
-);
 export const XMark = ({ size = 14 }: P) => (
   <svg {...base(size, 2.4)}>
     <path d="M6 6l12 12M18 6L6 18" />
+  </svg>
+);
+export const Info = ({ size = 18 }: P) => (
+  <svg {...base(size, 2)}>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M12 11v5.5" />
+    <circle cx="12" cy="7.8" r="0.6" fill="currentColor" />
   </svg>
 );
 export const ArrowUpRight = ({ size = 14 }: P) => (

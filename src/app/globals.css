@@ -13,7 +13,6 @@
   --accent: #b4441e; /* rust, 6.6:1 on paper */
   --accent-soft: rgba(180, 68, 30, 0.1);
   --on-accent: #fffaf3;
-  --red: #c0392b;
   --green: #3f7d4e;
   --ad-bg: #efe4cf;
   --ad-edge: #c9a96a;
@@ -24,14 +23,6 @@
   --scrim: rgba(20, 16, 12, 0.34);
   --shadow: 0 1px 2px rgba(60, 40, 20, 0.05), 0 6px 20px rgba(60, 40, 20, 0.06);
   --shadow-float: 0 2px 6px rgba(40, 28, 16, 0.08), 0 12px 32px rgba(40, 28, 16, 0.16);
-
-  /* Legacy names used by icons and states */
-  --label: var(--ink);
-  --label-2: var(--ink-2);
-  --label-3: var(--ink-3);
-  --separator: var(--rule);
-  --tint: var(--accent);
-  --tint-soft: var(--accent-soft);
 
   --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Helvetica Neue", Arial, sans-serif;
   --serif: var(--font-serif), "Iowan Old Style", "Charter", Georgia, serif;
@@ -56,11 +47,9 @@
   --tab-h: 50px;
   --tab-total: calc(var(--tab-h) + env(safe-area-inset-bottom));
 
-  /* Springs as CSS easing: critically damped default, plus a damped-0.8 curve for momentum. */
+  /* Spring as CSS easing: critically damped (damping 1, response 0.4); JS springs live in motion.ts. */
   --spring: linear(0, 0.005 1.2%, 0.029 3.1%, 0.079 5.4%, 0.152 8.1%, 0.243 11.1%, 0.343 14.4%, 0.445 17.8%, 0.543 21.5%, 0.632 25.3%, 0.71 29.4%, 0.776 33.5%, 0.83 37.9%, 0.873 42.4%, 0.907 47%, 0.933 51.8%, 0.952 56.7%, 0.966 61.7%, 0.977 66.8%, 0.984 72.1%, 0.989 77.5%, 0.993 82.9%, 0.995 88.5%, 0.997 94.2%, 1);
   --spring-dur: 0.54s;
-  --spring-bouncy: linear(0, 0.004 1.2%, 0.027 3.1%, 0.075 5.4%, 0.15 8.1%, 0.246 11.1%, 0.355 14.4%, 0.47 17.8%, 0.583 21.5%, 0.686 25.3%, 0.776 29.4%, 0.851 33.5%, 0.909 37.9%, 0.952 42.4%, 0.981 47%, 1 51.8%, 1.01 56.7%, 1.014 61.7%, 1.015 66.8%, 1.013 72.1%, 1.011 77.5%, 1.008 82.9%, 1.006 88.5%, 1.004 94.2%, 1);
-  --spring-bouncy-dur: 0.45s;
   color-scheme: light dark;
 }
 
@@ -79,7 +68,6 @@
     --accent: #e8956a; /* copper, 7.4:1 on cards */
     --accent-soft: rgba(232, 149, 106, 0.14);
     --on-accent: #1a1008;
-    --red: #ff7a6b;
     --green: #7fc79a;
     --ad-bg: #1d2030;
     --ad-edge: #b59a5e;
@@ -166,10 +154,6 @@ input:focus-visible,
 
 .spacer {
   flex: 1;
-}
-.caps {
-  text-transform: uppercase;
-  letter-spacing: var(--ls-caps);
 }
 
 /* ---------- Shell ---------- */
@@ -1407,4 +1391,54 @@ input:focus-visible,
     --ink-2: rgba(239, 231, 218, 0.86);
     --rule: rgba(239, 231, 218, 0.45);
   }
+}
+
+/* ---------- About sheet ---------- */
+.about {
+  padding: 20px 4px 24px;
+}
+.about-lead {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: var(--fs-body);
+  line-height: 1.5;
+}
+.about-head {
+  margin: 24px 0 8px;
+  font-size: var(--fs-label);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--ls-caps);
+  color: var(--accent);
+}
+.about-text,
+.about-list {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: var(--fs-sub);
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.about-list {
+  padding-left: 18px;
+}
+.about-list li + li {
+  margin-top: 4px;
+}
+.about-list strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+.about a {
+  color: var(--accent);
+}
+.info-btn {
+  margin-bottom: 2px;
+  color: var(--ink-2);
+}
+
+/* Public edition: no photos and short feed descriptions, so headline cards get more presence. */
+.edition-public .card.no-photo .card-headline {
+  font-size: var(--fs-title1);
+  line-height: 1.12;
 }

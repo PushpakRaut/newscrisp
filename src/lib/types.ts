@@ -10,6 +10,9 @@ export const CATEGORIES = [
 
 export type Category = (typeof CATEGORIES)[number];
 
+/** "public": safe to share (feed text only). "full": private version with article summaries and photos. */
+export type Edition = "public" | "full";
+
 /** A story as it comes out of an RSS feed, before summarizing. */
 export interface RawArticle {
   id: string;
@@ -39,18 +42,19 @@ export interface Short {
   alsoCoveredBy: string[];
 }
 
-export interface Comment {
-  id: string;
-  shortId: string;
-  handle: string;
-  text: string;
-  createdAt: string;
-}
-
 export interface FeedResponse {
   shorts: Short[];
-  comments: Record<string, number>;
   fetchedAt: string;
-  aiSummaries: boolean;
+  edition: Edition;
   failedSources: string[];
 }
+
+/** Why a reader reports a story. The menu shows the labels; the report API accepts only these ids. */
+export const REPORT_REASONS = [
+  { id: "wrong-facts", label: "Facts Are Wrong" },
+  { id: "misleading-headline", label: "Misleading Headline" },
+  { id: "duplicate", label: "Already Seen This Story" },
+  { id: "opinion-not-news", label: "Opinion or Clickbait" },
+  { id: "offensive", label: "Offensive" },
+  { id: "other", label: "Something Else" },
+] as const;

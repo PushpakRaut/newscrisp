@@ -46,12 +46,6 @@ export function timeAgo(iso: string): string {
   return `${Math.floor(s / 86400)}d ago`;
 }
 
-export function compact(n: number): string {
-  if (n < 1000) return String(n);
-  if (n < 1_000_000) return `${(n / 1000).toFixed(n < 10_000 ? 1 : 0)}k`;
-  return `${(n / 1_000_000).toFixed(1)}M`;
-}
-
 export const CATEGORY_LABEL: Record<Category, string> = {
   india: "India",
   world: "World",
@@ -60,16 +54,6 @@ export const CATEGORY_LABEL: Record<Category, string> = {
   sports: "Sports",
   entertainment: "Entertainment",
   science: "Science",
-};
-
-export const CATEGORY_EMOJI: Record<Category, string> = {
-  india: "🇮🇳",
-  world: "🌍",
-  business: "📈",
-  technology: "💻",
-  sports: "🏏",
-  entertainment: "🎬",
-  science: "🔬",
 };
 
 /** One line about each outlet, so readers know who is reporting. */

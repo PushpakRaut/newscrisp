@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import Parser from "rss-parser";
 import { SOURCES, type FeedSource } from "./sources";
 import { fetchArticleTexts, stripHtml } from "./article";
+import { IS_PUBLIC, PUBLIC_MAX_WORDS } from "./edition";
 import { summarizeAll } from "./summarize";
 import type { RawArticle, Short } from "./types";
 
@@ -9,12 +10,13 @@ type MediaItem = {
   "media:content"?: { $?: { url?: string; medium?: string } } | { $?: { url?: string } }[];
   "media:thumbnail"?: { $?: { url?: string } } | { $?: { url?: string } }[];
   "content:encoded"?: string;
+  description?: string;
 };
 
 const parser: Parser<object, MediaItem> = new Parser({
   timeout: 8000,
   headers: { "User-Agent": "newscrisp-mvp/0.1 (RSS reader)" },
-  customFields: { item: ["media:content", "media:thumbnail", "content:encoded"] },
+  customFields: { item: ["media:content", "media:thumbnail", "content:encoded", "description"] },
 });
 
 const CACHE_MS = 10 * 60_000;
@@ -66,7 +68,11 @@ async function fetchSource(src: FeedSource): Promise<RawArticle[]> {
     .slice(0, PER_FEED)
     .map((it) => {
       const published = it.isoDate ?? it.pubDate ?? new Date().toISOString();
-      const snippet = stripHtml(it["content:encoded"] ?? it.content ?? it.contentSnippet ?? it.summary ?? "");
+      // Public edition: only the feed's own short description, never the full-content field.
+      const description = typeof it.description === "string" ? it.description : (it.summary ?? "");
+      const snippet = stripHtml(
+        IS_PUBLIC ? description : (it["content:encoded"] ?? it.content ?? it.contentSnippet ?? it.summary ?? ""),
+      );
       return {
         id: idFor(it.link!),
         title: stripHtml(it.title!),
@@ -74,7 +80,7 @@ async function fetchSource(src: FeedSource): Promise<RawArticle[]> {
         source: src.name,
         category: src.category,
         publishedAt: new Date(published).toISOString(),
-        image: pickImage(it),
+        image: IS_PUBLIC ? null : pickImage(it), // publisher photos are not ours to show publicly
         snippet,
       };
     })
@@ -139,11 +145,13 @@ async function build(): Promise<Built> {
   kept.sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
   const top = kept.slice(0, 90);
 
-  // Most feeds carry only a line or two, so read each article's own page for the full story text.
-  const bodies = await fetchArticleTexts(top.map((a) => a.link));
-  for (const a of top) a.body = bodies.get(a.link) ?? "";
+  // Full edition only: most feeds carry a line or two, so read each article's own page.
+  if (!IS_PUBLIC) {
+    const bodies = await fetchArticleTexts(top.map((a) => a.link));
+    for (const a of top) a.body = bodies.get(a.link) ?? "";
+  }
 
-  const summaries = await summarizeAll(top);
+  const summaries = await summarizeAll(top, IS_PUBLIC ? { allowAI: false, maxWords: PUBLIC_MAX_WORDS } : {});
   const shorts: Short[] = top.map((a) => {
     const s = summaries.get(a.id)!;
     return {
@@ -163,9 +171,7 @@ async function build(): Promise<Built> {
 }
 
 export async function getShorts() {
-  if (cached && Date.now() - cachedAt < CACHE_MS) {
-    return { ...cached, aiSummaries: cached.shorts.some((s) => s.summaryBy === "ai") };
-  }
+  if (cached && Date.now() - cachedAt < CACHE_MS) return cached;
   if (!inflight) {
     inflight = build()
       .then((res) => {
@@ -179,6 +185,5 @@ export async function getShorts() {
         inflight = null;
       });
   }
-  const res = await inflight;
-  return { ...res, aiSummaries: res.shorts.some((s) => s.summaryBy === "ai") };
+  return inflight;
 }

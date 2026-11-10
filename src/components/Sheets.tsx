@@ -1,18 +1,10 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import type { Short } from "@/lib/types";
-import { CATEGORY_LABEL } from "@/lib/client";
+import { REPORT_REASONS, type Edition, type Short } from "@/lib/types";
+import { CATEGORY_LABEL, SOURCE_ABOUT } from "@/lib/client";
+import { SOURCES } from "@/lib/sources";
 import { useSheet } from "./motion";
-
-const REPORT_REASONS: { id: string; label: string }[] = [
-  { id: "wrong-facts", label: "Facts Are Wrong" },
-  { id: "misleading-headline", label: "Misleading Headline" },
-  { id: "duplicate", label: "Already Seen This Story" },
-  { id: "opinion-not-news", label: "Opinion or Clickbait" },
-  { id: "offensive", label: "Offensive" },
-  { id: "other", label: "Something Else" },
-];
 
 function useEscape(onEscape: () => void) {
   useEffect(() => {
@@ -29,6 +21,7 @@ function useEscape(onEscape: () => void) {
 export function MenuSheet({
   short,
   onClosed,
+  allowReport = true,
   onMuteSource,
   onLessCategory,
   onReport,
@@ -36,6 +29,8 @@ export function MenuSheet({
 }: {
   short: Short;
   onClosed: () => void;
+  /** Off in the public edition, which has no database to keep reports in. */
+  allowReport?: boolean;
   onMuteSource: (source: string) => void;
   onLessCategory: (s: Short) => void;
   onReport: (s: Short, reason: string) => void;
@@ -81,9 +76,11 @@ export function MenuSheet({
               <button className="action" onClick={run(() => onMuteSource(short.source))}>
                 Hide Stories from {short.source}
               </button>
-              <button className="action" onClick={() => setReporting(true)}>
-                Report a Problem…
-              </button>
+              {allowReport && (
+                <button className="action" onClick={() => setReporting(true)}>
+                  Report a Problem…
+                </button>
+              )}
             </>
           )}
         </div>
@@ -115,5 +112,58 @@ export function StorySheet({ onClosed, children }: { onClosed: () => void; child
         <div className="story-sheet-card">{children}</div>
       </div>
     </div>
+  );
+}
+
+const CONTACT = process.env.NEXT_PUBLIC_CONTACT_EMAIL;
+
+/** Where the stories come from, what NewsCrisp does and doesn't do with them, and privacy. */
+export function AboutSheet({ edition, onClosed }: { edition: Edition; onClosed: () => void }) {
+  const outlets = [...new Set(SOURCES.map((s) => s.name))];
+  return (
+    <StorySheet onClosed={onClosed}>
+      <article className="about">
+        <p className="story-page-kicker">About</p>
+        <h1 className="story-page-headline">NewsCrisp</h1>
+        <hr className="rule" />
+        {edition === "public" ? (
+          <p className="about-lead">
+            NewsCrisp shows the headlines and short descriptions that news outlets publish in their public RSS feeds.
+            Every story names its outlet and links to the full article on the outlet’s own site. NewsCrisp doesn’t copy
+            articles or photos, doesn’t rewrite them with AI, and isn’t affiliated with any of these outlets.
+          </p>
+        ) : (
+          <p className="about-lead">
+            This is the private edition of NewsCrisp. It reads each article’s page to build longer summaries and shows
+            publisher photos, so it isn’t meant to be shared publicly.
+          </p>
+        )}
+
+        <h2 className="about-head">Sources</h2>
+        <ul className="about-list">
+          {outlets.map((name) => (
+            <li key={name}>
+              <strong>{name}</strong>
+              {SOURCE_ABOUT[name] ? `: ${SOURCE_ABOUT[name]}` : ""}
+            </li>
+          ))}
+        </ul>
+
+        <h2 className="about-head">Your privacy</h2>
+        <p className="about-text">
+          No account, no ads and no tracking. The stories you’ve read and the sources you’ve hidden are kept only in
+          this browser on this device.
+        </p>
+
+        {CONTACT && (
+          <>
+            <h2 className="about-head">For publishers</h2>
+            <p className="about-text">
+              To have your feed removed or a story corrected, email <a href={`mailto:${CONTACT}`}>{CONTACT}</a>.
+            </p>
+          </>
+        )}
+      </article>
+    </StorySheet>
   );
 }
