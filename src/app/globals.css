@@ -1442,3 +1442,18 @@ input:focus-visible,
   font-size: var(--fs-title1);
   line-height: 1.12;
 }
+.about-disclaimer {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent);
+  border-radius: 10px;
+  background: var(--fill);
+  font-size: var(--fs-foot);
+  line-height: 1.45;
+  letter-spacing: var(--ls-foot);
+  color: var(--ink-2);
+}
+.about-disclaimer strong {
+  color: var(--ink);
+}

@@ -126,6 +126,11 @@ export function AboutSheet({ edition, onClosed }: { edition: Edition; onClosed: 
         <p className="story-page-kicker">About</p>
         <h1 className="story-page-headline">NewsCrisp</h1>
         <hr className="rule" />
+        <p className="about-disclaimer" role="note">
+          <strong>Personal project.</strong> NewsCrisp is a personal, non-commercial project. It doesn’t sell anything,
+          show real ads or earn money, and isn’t affiliated with any news outlet. All news content belongs to its
+          publishers.
+        </p>
         {edition === "public" ? (
           <p className="about-lead">
             NewsCrisp shows the headlines and short descriptions that news outlets publish in their public RSS feeds.
