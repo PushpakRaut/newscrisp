@@ -9,6 +9,42 @@ The same code runs as one of two editions:
 - **Public edition** (the default): safe to share. It shows only what news outlets publish in their public RSS feeds: headline, short description and a link back.
 - **Private (full) edition**: for personal use. It shows publisher photos and longer summaries made from the full article. It's protected by a password when hosted.
 
+**Try it:** [newscrisp.vercel.app](https://newscrisp.vercel.app/) runs the public edition. The private edition is password-protected and isn't open to the public.
+
+## Screenshots
+
+### Public edition
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/public-feed-light.jpg" width="240" alt="Public edition feed in light mode: a text-only story card with a topic icon, topic bubbles and topic tabs"></td>
+    <td align="center"><img src="docs/screenshots/public-feed-dark.jpg" width="240" alt="Public edition feed in dark mode, deep navy with copper accents"></td>
+    <td align="center"><img src="docs/screenshots/public-about.jpg" width="240" alt="About page with the personal-project disclaimer and the list of sources"></td>
+  </tr>
+  <tr>
+    <td align="center">Feed (light)</td>
+    <td align="center">Feed (dark)</td>
+    <td align="center">About page and disclaimer</td>
+  </tr>
+</table>
+
+### Private (full) edition
+
+Publisher photos are blurred in these screenshots because they belong to the news outlets. The app shows them normally.
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/private-feed-light.jpg" width="240" alt="Private edition feed with a photo and a longer summary (photo blurred)"></td>
+    <td align="center"><img src="docs/screenshots/private-stories.jpg" width="240" alt="Full-screen Stories viewer with progress bars and an Open story button (photo blurred)"></td>
+    <td align="center"><img src="docs/screenshots/private-story-dark.jpg" width="240" alt="Full story page in dark mode with a large first letter and source note (photo blurred)"></td>
+  </tr>
+  <tr>
+    <td align="center">Feed with photos</td>
+    <td align="center">Stories viewer</td>
+    <td align="center">Full story page (dark)</td>
+  </tr>
+</table>
+
 ## Features
 
 ### In both editions
