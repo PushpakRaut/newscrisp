@@ -124,7 +124,7 @@ Your browser will ask for a user name and password. Any user name works.
 
 You can host both editions from one GitHub repository as two separate Vercel projects.
 
-1. Push the project to a **private** GitHub repository.
+1. Push the project to a GitHub repository. It can be public: the code holds no secrets, and the private edition is protected by `SITE_PASSWORD` in Vercel's settings, not by the repository. Never commit `.env.local` or a password (git already ignores `.env*` files).
 2. Sign in at [vercel.com](https://vercel.com) with GitHub.
 3. **Public edition:** Add New → Project, import the repository, and name it, for example, `newscrisp`. Leave the settings empty and click Deploy.
 4. **Private edition:** Add New → Project, import the **same** repository again, and name it, for example, `newscrisp-full`. Under Environment Variables add:
